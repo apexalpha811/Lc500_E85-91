@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>E85 vs Premium Fuel Break-Even Calculator</title>
+<title>E85 vs Premium 91 Fuel Break-Even Calculator</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root{
@@ -62,12 +62,12 @@ h2{font-size:1.05rem;margin:0 0 12px;text-transform:uppercase;letter-spacing:.05
 </head>
 <body>
 <div class="wrap">
-  <h1>E85 vs Premium Break-Even</h1>
+  <h1>E85 vs Premium 91 Break-Even</h1>
   <p class="sub">2021 Lexus LC 500 &middot; flex-fuel conversion</p>
 
   <div class="tabs" role="tablist">
-    <button class="tab" id="tabA" role="tab" aria-selected="true">I know premium price &rarr; what should E85 cost?</button>
-    <button class="tab" id="tabB" role="tab" aria-selected="false">I know E85 price &rarr; what would premium need to be?</button>
+    <button class="tab" id="tabA" role="tab" aria-selected="true">I know premium 91 price &rarr; what should E85 cost?</button>
+    <button class="tab" id="tabB" role="tab" aria-selected="false">I know E85 price &rarr; what would premium 91 need to be?</button>
   </div>
 
   <div class="hero">
@@ -81,7 +81,7 @@ h2{font-size:1.05rem;margin:0 0 12px;text-transform:uppercase;letter-spacing:.05
       <div><label for="prem">Premium 91 $/gal</label><input type="number" id="prem" step="0.01" min="0" value="5.29"></div>
       <div><label for="e85">E85 $/gal</label><input type="number" id="e85" step="0.01" min="0" value="4.19"></div>
       <div><label for="tank">Tank capacity (gal)</label><input type="number" id="tank" step="0.1" min="1" value="21.7"></div>
-      <div><label for="mpg">Premium combined MPG</label><input type="number" id="mpg" step="0.1" min="1" value="19"></div>
+      <div><label for="mpg">Premium 91 combined MPG</label><input type="number" id="mpg" step="0.1" min="1" value="19"></div>
       <div style="grid-column:1/-1">
         <label for="loss">E85 efficiency loss: <span class="slider-val" id="lossVal">20%</span></label>
         <input type="range" id="loss" min="5" max="30" step="1" value="20">
@@ -168,13 +168,13 @@ function render(){
   if (mode === 'A'){
     $('heroLabel').textContent = 'E85 break-even price';
     $('heroVal').textContent = money(c.e85Break);
-    $('heroNote').textContent = 'At ' + money(v.prem) + '/gal premium and ' +
+    $('heroNote').textContent = 'At ' + money(v.prem) + '/gal premium 91 and ' +
       Math.round(v.loss*100) + '% loss, E85 must be at or below ' + money(c.e85Break) + '/gal to be worth it.';
   } else {
-    $('heroLabel').textContent = 'Premium break-even price';
+    $('heroLabel').textContent = 'Premium 91 break-even price';
     $('heroVal').textContent = money(c.premBreak);
     $('heroNote').textContent = 'At ' + money(v.e85) + '/gal E85 and ' +
-      Math.round(v.loss*100) + '% loss, premium would have to cost ' + money(c.premBreak) + '/gal for the two to tie.';
+      Math.round(v.loss*100) + '% loss, premium 91 would have to cost ' + money(c.premBreak) + '/gal for the two to tie.';
   }
 
   $('r-pp').textContent = money(v.prem);
@@ -198,7 +198,7 @@ function render(){
     $('winNote').textContent = 'E85 is cheaper per mile at these prices.';
   } else {
     b.textContent = 'WINNER: PREMIUM 91'; b.className = 'badge';
-    $('winNote').textContent = 'Premium is cheaper per mile at these prices.';
+    $('winNote').textContent = 'Premium 91 is cheaper per mile at these prices.';
   }
   $('savings').textContent = diff >= 0
     ? 'Running E85 saves ' + money(diff) + ' over one full tank (' + Math.round(c.eMiles) + ' mi).'
