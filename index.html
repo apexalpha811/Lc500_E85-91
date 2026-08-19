@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E85 vs Premium Fuel Break-Even Calculator</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --black:#000000;
+  --white:#FFFFFF;
+  --blue:#1D00C6;
+  --blue-lite:#4a33e0;
+  --card:#FFFFFF;
+  --ink:#111111;
+  --muted:#555555;
+  --line:#d8d8d8;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--black);color:var(--white);
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.5;
+}
+.wrap{width:100%;max-width:1100px;margin:0 auto;padding:clamp(16px,3vw,32px)}
+h1{font-size:clamp(1.5rem,4vw,2.4rem);margin:0 0 .25rem;letter-spacing:-.02em}
+.sub{color:#bdbdbd;margin:0 0 1.5rem;font-size:clamp(.9rem,2vw,1rem)}
+.card{background:var(--card);color:var(--ink);border-radius:14px;padding:clamp(14px,2.5vw,22px);margin-bottom:18px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.tab{
+  flex:1 1 260px;min-height:44px;cursor:pointer;
+  background:var(--white);color:var(--ink);border:2px solid var(--white);
+  border-radius:10px;padding:12px 14px;font-size:.95rem;font-weight:600;text-align:left;
+}
+.tab[aria-selected="true"]{background:var(--blue);border-color:var(--blue);color:var(--white)}
+.tab:focus-visible,input:focus-visible,button:focus-visible{outline:3px solid var(--blue-lite);outline-offset:2px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+label{display:block;font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:6px}
+input[type=number]{
+  width:100%;min-height:44px;padding:10px 12px;font-size:1rem;
+  border:2px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink);
+}
+input[type=range]{width:100%;accent-color:var(--blue);min-height:44px}
+.slider-val{font-weight:800;color:var(--blue);font-variant-numeric:tabular-nums}
+.hero{background:var(--blue);color:var(--white);border-radius:14px;padding:clamp(16px,3vw,26px);margin-bottom:18px}
+.hero .label{font-size:.85rem;text-transform:uppercase;letter-spacing:.06em;opacity:.85}
+.hero .big{font-size:clamp(2.2rem,8vw,3.6rem);font-weight:800;line-height:1.05;font-variant-numeric:tabular-nums}
+.hero .note{font-size:.9rem;opacity:.9;margin-top:.4rem}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:10px 8px;text-align:right;border-bottom:1px solid var(--line);font-size:clamp(.85rem,2vw,1rem)}
+th:first-child,td:first-child{text-align:left}
+thead th{color:var(--muted);font-size:.78rem;text-transform:uppercase;letter-spacing:.04em}
+.badge{display:inline-block;background:var(--blue);color:var(--white);font-weight:800;padding:6px 14px;border-radius:999px;font-size:.9rem}
+.badge.tie{background:var(--ink)}
+.win{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.chartbox{position:relative;height:clamp(220px,38vw,320px)}
+h2{font-size:1.05rem;margin:0 0 12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.disclaim{color:#b9b9b9;font-size:.85rem;border-left:3px solid var(--blue);padding-left:12px}
+.reset{background:var(--blue);color:var(--white);border:0;border-radius:8px;min-height:44px;padding:0 18px;font-weight:700;cursor:pointer}
+@media (min-width:1441px){body{font-size:1.05rem}.wrap{max-width:1240px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>E85 vs Premium Break-Even</h1>
+  <p class="sub">2021 Lexus LC 500 &middot; flex-fuel conversion</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" id="tabA" role="tab" aria-selected="true">I know premium price &rarr; what should E85 cost?</button>
+    <button class="tab" id="tabB" role="tab" aria-selected="false">I know E85 price &rarr; what would premium need to be?</button>
+  </div>
+
+  <div class="hero">
+    <div class="label" id="heroLabel">E85 break-even price</div>
+    <div class="big" id="heroVal">$0.00</div>
+    <div class="note" id="heroNote"></div>
+  </div>
+
+  <div class="card">
+    <div class="grid">
+      <div><label for="prem">Premium 91 $/gal</label><input type="number" id="prem" step="0.01" min="0" value="5.29"></div>
+      <div><label for="e85">E85 $/gal</label><input type="number" id="e85" step="0.01" min="0" value="4.19"></div>
+      <div><label for="tank">Tank capacity (gal)</label><input type="number" id="tank" step="0.1" min="1" value="21.7"></div>
+      <div><label for="mpg">Premium combined MPG</label><input type="number" id="mpg" step="0.1" min="1" value="19"></div>
+      <div style="grid-column:1/-1">
+        <label for="loss">E85 efficiency loss: <span class="slider-val" id="lossVal">20%</span></label>
+        <input type="range" id="loss" min="5" max="30" step="1" value="20">
+      </div>
+    </div>
+    <p style="margin:14px 0 0"><button class="reset" id="reset">Reset to defaults</button></p>
+  </div>
+
+  <div class="card">
+    <div class="win"><span class="badge" id="winner">&mdash;</span><span id="winNote"></span></div>
+    <table>
+      <thead><tr><th>Metric</th><th>Premium 91</th><th>E85</th></tr></thead>
+      <tbody>
+        <tr><td>Price / gallon</td><td id="r-pp"></td><td id="r-ep"></td></tr>
+        <tr><td>Effective MPG</td><td id="r-pm"></td><td id="r-em"></td></tr>
+        <tr><td>Cost per mile</td><td id="r-pcpm"></td><td id="r-ecpm"></td></tr>
+        <tr><td>Cost per full tank</td><td id="r-pt"></td><td id="r-et"></td></tr>
+        <tr><td>Miles per tank</td><td id="r-pmt"></td><td id="r-emt"></td></tr>
+      </tbody>
+    </table>
+    <p id="savings" style="margin:14px 0 0;font-weight:700"></p>
+  </div>
+
+  <div class="card">
+    <h2>Cost per mile</h2>
+    <div class="chartbox"><canvas id="chart"></canvas></div>
+  </div>
+
+  <div class="card">
+    <h2>Typical E85 efficiency loss</h2>
+    <table>
+      <thead><tr><th>Setup</th><th>Loss range</th></tr></thead>
+      <tbody>
+        <tr><td>Dyno-tuned, optimized timing</td><td>5&ndash;10%</td></tr>
+        <tr><td>Basic flex-fuel kit, stock tune</td><td>15&ndash;25%</td></tr>
+        <tr><td>Aggressive driving, any setup</td><td>20&ndash;30%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="disclaim">Pump E85 ethanol content varies roughly 51&ndash;85% by region and season (winter blends run leaner on ethanol). Real mileage fluctuates fill to fill, so treat these numbers as a planning estimate, not a guarantee.</p>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const KEY = 'lc500-e85-inputs';
+const DEFAULTS = {prem:5.29, e85:4.19, tank:21.7, mpg:19, loss:20, mode:'A'};
+const money = n => '$' + n.toFixed(2);
+
+let mode = 'A';
+let chart;
+
+function read(){
+  return {
+    prem: +$('prem').value || 0,
+    e85: +$('e85').value || 0,
+    tank: +$('tank').value || 0,
+    mpg: +$('mpg').value || 0,
+    loss: +$('loss').value / 100,
+    mode
+  };
+}
+
+function calc(v){
+  const eMpg = v.mpg * (1 - v.loss);
+  return {
+    eMpg,
+    pCpm: v.mpg > 0 ? v.prem / v.mpg : 0,
+    eCpm: eMpg > 0 ? v.e85 / eMpg : 0,
+    pTank: v.prem * v.tank,
+    eTank: v.e85 * v.tank,
+    pMiles: v.tank * v.mpg,
+    eMiles: v.tank * eMpg,
+    // ponytail: the two break-even formulas are inverses of each other
+    e85Break: v.prem * (1 - v.loss),
+    premBreak: (1 - v.loss) > 0 ? v.e85 / (1 - v.loss) : 0
+  };
+}
+
+function render(){
+  const v = read(), c = calc(v);
+  $('lossVal').textContent = Math.round(v.loss * 100) + '%';
+
+  if (mode === 'A'){
+    $('heroLabel').textContent = 'E85 break-even price';
+    $('heroVal').textContent = money(c.e85Break);
+    $('heroNote').textContent = 'At ' + money(v.prem) + '/gal premium and ' +
+      Math.round(v.loss*100) + '% loss, E85 must be at or below ' + money(c.e85Break) + '/gal to be worth it.';
+  } else {
+    $('heroLabel').textContent = 'Premium break-even price';
+    $('heroVal').textContent = money(c.premBreak);
+    $('heroNote').textContent = 'At ' + money(v.e85) + '/gal E85 and ' +
+      Math.round(v.loss*100) + '% loss, premium would have to cost ' + money(c.premBreak) + '/gal for the two to tie.';
+  }
+
+  $('r-pp').textContent = money(v.prem);
+  $('r-ep').textContent = money(v.e85);
+  $('r-pm').textContent = v.mpg.toFixed(1) + ' mpg';
+  $('r-em').textContent = c.eMpg.toFixed(1) + ' mpg';
+  $('r-pcpm').textContent = '$' + c.pCpm.toFixed(3);
+  $('r-ecpm').textContent = '$' + c.eCpm.toFixed(3);
+  $('r-pt').textContent = money(c.pTank);
+  $('r-et').textContent = money(c.eTank);
+  $('r-pmt').textContent = Math.round(c.pMiles) + ' mi';
+  $('r-emt').textContent = Math.round(c.eMiles) + ' mi';
+
+  const diff = (c.pCpm - c.eCpm) * c.eMiles; // dollars saved on E85 over one E85 tank's range
+  const b = $('winner');
+  if (Math.abs(c.pCpm - c.eCpm) < 0.0005){
+    b.textContent = 'TIE'; b.className = 'badge tie';
+    $('winNote').textContent = 'Both fuels cost the same per mile.';
+  } else if (c.eCpm < c.pCpm){
+    b.textContent = 'WINNER: E85'; b.className = 'badge';
+    $('winNote').textContent = 'E85 is cheaper per mile at these prices.';
+  } else {
+    b.textContent = 'WINNER: PREMIUM 91'; b.className = 'badge';
+    $('winNote').textContent = 'Premium is cheaper per mile at these prices.';
+  }
+  $('savings').textContent = diff >= 0
+    ? 'Running E85 saves ' + money(diff) + ' over one full tank (' + Math.round(c.eMiles) + ' mi).'
+    : 'Running E85 costs an extra ' + money(-diff) + ' over one full tank (' + Math.round(c.eMiles) + ' mi).';
+
+  chart.data.datasets[0].data = [c.pCpm, c.eCpm];
+  chart.update();
+
+  localStorage.setItem(KEY, JSON.stringify({...v, loss: v.loss*100, mode}));
+}
+
+function setMode(m){
+  mode = m;
+  $('tabA').setAttribute('aria-selected', m === 'A');
+  $('tabB').setAttribute('aria-selected', m === 'B');
+  render();
+}
+
+function load(){
+  let s = DEFAULTS;
+  try { s = {...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || '{}')}; } catch(e){}
+  ['prem','e85','tank','mpg','loss'].forEach(k => $(k).value = s[k]);
+  mode = s.mode === 'B' ? 'B' : 'A';
+}
+
+chart = new Chart($('chart'), {
+  type: 'bar',
+  data: {labels:['Premium 91','E85'], datasets:[{data:[0,0], backgroundColor:'#1D00C6', borderRadius:6}]},
+  options: {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{callbacks:{label: c => '$' + c.parsed.y.toFixed(3) + ' / mile'}}},
+    scales:{y:{beginAtZero:true, ticks:{callback: v => '$' + v.toFixed(2)}}}
+  }
+});
+
+['prem','e85','tank','mpg','loss'].forEach(k => $(k).addEventListener('input', render));
+$('tabA').onclick = () => setMode('A');
+$('tabB').onclick = () => setMode('B');
+$('reset').onclick = () => { localStorage.removeItem(KEY); load(); setMode(mode); };
+
+load();
+setMode(mode);
+
+// ponytail: one self-check for the money math, runs only with ?selftest
+if (location.search.includes('selftest')){
+  const t = calc({prem:5, e85:4, tank:20, mpg:20, loss:0.2});
+  console.assert(Math.abs(t.e85Break - 4) < 1e-9, 'e85 break-even');
+  console.assert(Math.abs(t.premBreak - 5) < 1e-9, 'premium break-even');
+  console.assert(Math.abs(t.eMpg - 16) < 1e-9, 'effective mpg');
+  console.assert(Math.abs(t.pCpm - t.eCpm) < 1e-9, 'break-even means equal cost per mile');
+  console.log('selftest done');
+}
+</script>
+</body>
+</html>
